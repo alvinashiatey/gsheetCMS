@@ -4,20 +4,112 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Google Sheet as CMS Template</title>
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <main>
+      <section id="head">
+        <h2>Hats</h2>
+      </section>
+      <section id="dresses">
+        <h2>Dresses</h2>
+      </section>
+      <section id="sweaters">
+        <h2>Sweaters</h2>
+      </section>
+      <section id="shoulders">
+        <h2>Tops</h2>
+      </section>
+      <section id="knees">
+        <h2>Bottoms</h2>
+      </section>
+      <section id="toes">
+        <h2>Shoes</h2>
+      </section>
+      <section id="outerwear">
+        <h2>Outerwear</h2>
+      </section>
+
+      <footer class="misc"></footer>
+    </main>
     <script>
       const API =
         "https://script.google.com/macros/s/AKfycbyiYA7eGnUlusN96BQFXkAIdBuNdiakAt6SOncokEeGv3RwPd-tSf_hPaivXteP_2FsQQ/exec";
 
+      // Mapping of clothing types to their corresponding section IDs
+      const TYPE_TO_SECTION = {
+        Hat: "head",
+        Dress: "dresses",
+        Sweater: "sweaters",
+        Top: "shoulders",
+        Bottom: "knees",
+        Shoes: "toes",
+        Outerwear: "outerwear",
+      };
+
+      // Create clothing item element
+      function createClothingItem(row) {
+        const div = document.createElement("div");
+        div.className = `item ${row.Type}`;
+
+        const template = [
+          ["img", { src: row.Photo }],
+          ["p", { className: "brand", textContent: row.Brand }],
+          ["p", { className: "clothing-type", textContent: row.Type }],
+          [
+            "p",
+            {
+              className: "condition",
+              textContent: `✿ Condition: ${row["Condition"]}`,
+            },
+          ],
+          [
+            "p",
+            {
+              className: "hate-or-love",
+              textContent: `✿ Hate or Love: ${row["Feel good in it"]}`,
+            },
+          ],
+          ["p", { className: "cost", textContent: `❥ Paid: ${row["Cost"]}` }],
+        ];
+
+        for (const [tag, props] of template) {
+          const el = document.createElement(tag);
+          Object.assign(el, props);
+          div.appendChild(el);
+        }
+
+        return div;
+      }
+
+      // Organize clothing items into their sections
+      function organizeItemsByType() {
+        for (const [type, sectionId] of Object.entries(TYPE_TO_SECTION)) {
+          const section = document.getElementById(sectionId);
+          if (!section) continue;
+
+          const items = document.querySelectorAll(`.item.${type}`);
+          for (const item of items) {
+            section.appendChild(item);
+          }
+        }
+      }
+
+      // Main
       fetch(API)
-        .then((response) => response.json())
-        .then((data) => {
-          console.log(data);
+        .then((res) => res.json())
+        .then(({ data }) => {
+          const container = document.querySelector(".misc");
+          const fragment = document.createDocumentFragment();
+
+          for (const row of data[0].children) {
+            fragment.appendChild(createClothingItem(row));
+          }
+
+          container.appendChild(fragment);
+          organizeItemsByType();
         })
-        .catch((error) => {
-          console.error("Error fetching API:", error);
-        });
+        .catch((err) => console.error("Error fetching API:", err));
     </script>
   </body>
 </html>
